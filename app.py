@@ -26,6 +26,45 @@ It can automatically extract the **3′UTR** from mRNA (GenBank format) and comp
 """)
 
 # ---------------------------
+# Authentication (Username/Password)
+# ---------------------------
+def ensure_authenticated():
+    """Require username/password before accessing the app.
+    Set environment variables APP_USERNAME and APP_PASSWORD.
+    """
+    env_user = os.getenv("APP_USERNAME")
+    env_pass = os.getenv("APP_PASSWORD")
+
+    if not env_user or not env_pass:
+        st.error("Authentication not configured. Please set APP_USERNAME and APP_PASSWORD environment variables.")
+        st.stop()
+
+    if "auth_ok" not in st.session_state:
+        st.session_state.auth_ok = False
+
+    if not st.session_state.auth_ok:
+        with st.form("login_form", clear_on_submit=False):
+            u = st.text_input("Username")
+            p = st.text_input("Password", type="password")
+            submitted = st.form_submit_button("Login")
+        if submitted:
+            if u == env_user and p == env_pass:
+                st.session_state.auth_ok = True
+                st.success("Login successful")
+            else:
+                st.error("Invalid credentials")
+                st.stop()
+        if not st.session_state.auth_ok:
+            st.stop()
+
+    # Logout control in sidebar
+    if st.sidebar.button("Log out"):
+        st.session_state.auth_ok = False
+        st.experimental_rerun()
+
+ensure_authenticated()
+
+# ---------------------------
 # Inputs
 # ---------------------------
 gene_input = st.text_area(
